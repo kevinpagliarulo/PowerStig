@@ -47,7 +47,18 @@ Updated `dscResourceModule` mappings for affected rule types:
 - ServiceRule: PSDscResources → xPSDesiredStateConfiguration
 - WindowsFeatureRule: PSDscResources → xPSDesiredStateConfiguration
 
-### 4. Test Files (2 files updated)
+**IMPORTANT NOTE:** The Data.ps1 mapping layer serves as the runtime translation mechanism. STIG XML data files in `source/StigData/Processed/` still contain `dscresourcemodule="PSDscResources"` attributes, but these are translated at runtime by Data.ps1. This design allows XML metadata to remain unchanged while the code properly routes to xPSDesiredStateConfiguration.
+
+### 4. STIG XML Data Files (NOT Modified)
+**Location:** `source/StigData/Processed/*.xml` (~60+ files)
+
+These files contain `dscresourcemodule="PSDscResources"` attributes in rule definitions (RegistryRule, ServiceRule, WindowsFeatureRule, etc.). These attributes are **metadata only** and are processed by the Data.ps1 mapping layer at runtime.
+
+- **Status:** Not modified (by design)
+- **Functional Impact:** None - Data.ps1 handles runtime translation
+- **Future Cleanup:** Optional cosmetic update for metadata consistency (see Checklist for details)
+
+### 5. Test Files (2 files updated)
 - Tests/Unit/DSCResources/windows.Registry.config.ps1
 - Tests/Unit/Module/STIG.RuleQuery.tests.ps1
 
@@ -222,6 +233,43 @@ If issues arise, revert to PSDscResources by reversing the changes:
 2. **Monitor** xPSDesiredStateConfiguration releases for updates
 3. **Document** any compatibility issues found during testing
 4. **Consider contributing** findings back to the xPSDesiredStateConfiguration community
+5. **Optional cleanup task:** Update XML metadata files (see MIGRATION_CHECKLIST.md for details - cosmetic only, no functional impact)
+
+## XML Metadata Cleanup (Optional Future Task)
+
+### Background
+STIG XML data files in `source/StigData/Processed/` contain `dscresourcemodule="PSDscResources"` attributes. While the Data.ps1 mapping layer correctly translates these at runtime (ensuring full functionality), updating the XML metadata would improve consistency and reduce confusion for future maintainers.
+
+### Scope
+- **Files affected:** ~60+ XML files in `source/StigData/Processed/`
+- **Rule types affected:** RegistryRule, ServiceRule, WindowsFeatureRule, GroupRule, DnsServerRootHintRule
+- **Example:** `<RegistryRule dscresourcemodule="PSDscResources">` → `<RegistryRule dscresourcemodule="xPSDesiredStateConfiguration">`
+
+### Impact Analysis
+- **Functional:** None - Data.ps1 already handles translation
+- **Testing:** None required - purely metadata change
+- **Risk:** Minimal - simple find/replace operation
+- **Benefit:** Metadata accuracy and reduced confusion
+
+### Recommended Approach
+```powershell
+# Bulk update all processed XML files
+$xmlFiles = Get-ChildItem -Path ".\source\StigData\Processed" -Filter "*.xml"
+foreach ($file in $xmlFiles) {
+    $content = Get-Content $file.FullName -Raw
+    $updated = $content -replace 'dscresourcemodule="PSDscResources"', 'dscresourcemodule="xPSDesiredStateConfiguration"'
+    if ($content -ne $updated) {
+        Set-Content -Path $file.FullName -Value $updated -NoNewline
+        Write-Host "Updated: $($file.Name)"
+    }
+}
+```
+
+### When to Execute
+- After all functional testing is complete
+- During a planned maintenance window
+- As part of next major release preparation
+- Low priority - can be deferred indefinitely without impact
 5. **Update deployment documentation** to reflect new module dependency
 
 ## References

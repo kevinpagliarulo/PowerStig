@@ -10,6 +10,7 @@
 - [x] Updated Data.ps1 rule type mappings (5 rule types)
 - [x] Updated test files (2 files)
 - [x] Verified zero remaining "PSDscResources" references in source code
+- [x] **VERIFIED:** PSDscResources references in XML files are handled by Data.ps1 runtime mapping layer (no code impact)
 
 ### Module Installation
 - [x] Installed xPSDesiredStateConfiguration v9.2.1
@@ -60,6 +61,13 @@
 - [ ] Prepare rollback procedures
 - [ ] Schedule maintenance window for production deployment
 - [ ] Backup existing configurations before deployment
+
+### Optional Future Cleanup (Non-Critical)
+- [ ] Update XML metadata in StigData/Processed/*.xml files to reference xPSDesiredStateConfiguration (cosmetic only - runtime mapping already handles this)
+  - Note: ~60+ XML files contain `dscresourcemodule="PSDscResources"` attributes
+  - Impact: None (Data.ps1 mapping layer translates at runtime)
+  - Benefit: Metadata consistency and reduced confusion for future maintainers
+  - Effort: Bulk find/replace operation across all processed XML files
 
 ## 📋 Quick Validation Commands
 
@@ -152,6 +160,7 @@ Migration is considered successful when:
 - **Files Modified:** 25 total (21 schema files + 4 resource files)
 - **Testing Status:** Successfully compiled 323.61 KB MOF, Test-DscConfiguration passed
 - **Skip Rules:** 10 rules skipped for testing (certificates, NTFS permissions, PNRP feature)
+- **XML Metadata:** PSDscResources references remain in XML data files but are handled by Data.ps1 runtime mapping (no functional impact)
 
 ### Environment
 - **PowerShell Version:** 7.5.4 (detected during migration)
