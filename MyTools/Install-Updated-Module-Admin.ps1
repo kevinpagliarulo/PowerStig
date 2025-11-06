@@ -8,7 +8,7 @@ Write-Host "Installing Updated PowerSTIG Module" -ForegroundColor Cyan
 Write-Host "================================`n" -ForegroundColor Cyan
 
 # Define paths
-$sourcePath = Join-Path $PSScriptRoot "source"
+$sourcePath = Join-Path (Split-Path $PSScriptRoot -Parent) "source"
 $systemPath = 'C:\Program Files\WindowsPowerShell\Modules\PowerStig'
 $ps51UserPath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\PowerStig"
 $ps7UserPath = "$env:USERPROFILE\Documents\PowerShell\Modules\PowerStig"

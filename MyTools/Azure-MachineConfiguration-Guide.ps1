@@ -86,7 +86,7 @@ First, compile the PowerSTIG configuration:
     'V-254442.a', 'V-254442.b', 'V-254442.c', 'V-254442.d'
     'V-254443', 'V-254444.a', 'V-254444.b'
     
-    # NTFS Permission rules (AccessControlDSC version conflicts)
+    # NTFS Permission rules (environment-specific issues)
     'V-254391', 'V-254392'
     
     # PNRP feature not available on Domain Controllers
@@ -94,12 +94,12 @@ First, compile the PowerSTIG configuration:
 )
 
 # Run the sample script with skip rules
-.\Test-WindowsServer2022.ps1 -OutputPath C:\DSC\WindowsServer2022
+.\Test-WindowsServer2022MS.ps1 -OutputPath C:\DSC\WindowsServer2022MS
 
 This will:
 ✓ Compile Windows Server 2022 STIG configuration
 ✓ Use xPSDesiredStateConfiguration (migrated module)
-✓ Generate MOF file(s) in C:\DSC\WindowsServer2022
+✓ Generate MOF file(s) in C:\DSC\WindowsServer2022MS
 ✓ Include WindowsFeature resources (DISM-dependent)
 ✓ Skip rules that cause module version conflicts
 
@@ -114,7 +114,7 @@ Write-Host "           migration resolves DISM loading issues for WindowsFeature
 $compiled = Read-Host "Have you compiled the configuration? (Y/N)"
 if ($compiled -ne 'Y')
 {
-    Write-Host "Run .\Test-WindowsServer2022.ps1 first, then return to this guide." -ForegroundColor Yellow
+    Write-Host "Run .\Test-WindowsServer2022MS.ps1 first, then return to this guide." -ForegroundColor Yellow
     exit
 }
 
@@ -129,8 +129,8 @@ Convert the PowerSTIG MOF into an Azure Machine Configuration package:
 
 Write-Host @'
 # Define package parameters
-$packageName = "WindowsServer2022_STIG"
-$mofPath = "C:\DSC\WindowsServer2022\localhost.mof"
+$packageName = "WindowsServer2022MS_STIG"
+$mofPath = "C:\DSC\WindowsServer2022MS\localhost.mof"
 $outputPath = "C:\GuestConfig\Packages"
 
 # Create output directory
@@ -164,7 +164,7 @@ Write-Host @'
 Test the package on a Windows Server 2022 machine before deploying to Azure:
 
 # Get the package path
-$packagePath = "C:\GuestConfig\Packages\WindowsServer2022_STIG.zip"
+$packagePath = "C:\GuestConfig\Packages\WindowsServer2022MS_STIG.zip"
 
 # Verify package exists
 if (Test-Path $packagePath) {
@@ -187,7 +187,7 @@ Write-Host "  Compliance Status: $($compliance.complianceStatus)" -ForegroundCol
 Write-Host "  Resources Checked: $($compliance.resources.Count)" -ForegroundColor Gray
 
 # Show non-compliant resources (if any)
-$nonCompliant = $compliance.resources | Where-Object { $_.complianceStatus -ne "Compliant" }
+$nonCompliant = $compliance.resources | Where-Object { $_.complianceStatus -ne "True" }
 if ($nonCompliant) {
     Write-Host "`nNon-Compliant Resources ($($nonCompliant.Count)):" -ForegroundColor Yellow
     $nonCompliant | Select-Object -First 10 resourceId, complianceStatus, reasons | Format-Table -AutoSize -Wrap
@@ -255,9 +255,10 @@ $container = New-AzStorageContainer `
     -Context $ctx `
     -Permission Blob
 
+$container = Get-AzStorageContainer -Name $containerName -Context $ctx
 # Upload the package
-$packagePath = "C:\GuestConfig\Packages\WindowsServer2022_STIG.zip"
-$blobName = "WindowsServer2022_STIG.zip"
+$packagePath = "C:\GuestConfig\Packages\WindowsServer2022MS_STIG.zip"
+$blobName = "WindowsServer2022MS_STIG.zip"
 
 $blob = Set-AzStorageBlobContent `
     -File $packagePath `
@@ -295,36 +296,35 @@ Create an Azure Policy that uses your Guest Configuration package:
 
 Write-Host @'
 # Use the New-GuestConfigurationPolicy cmdlet (the correct way for Guest Configuration)
-$packagePath = "C:\GuestConfig\Packages\WindowsServer2022_STIG.zip"
+$packagePath = "C:\GuestConfig\Packages\WindowsServer2022MS_STIG.zip"
 
 $policyGuid = [guid]::NewGuid().ToString()
 
 # Generate policy definition from Guest Configuration package
 $policyConfig = New-GuestConfigurationPolicy `
     -PolicyId $policyGuid `
-    -ContentUri "https://stigconfigs7920.blob.core.windows.net/guestconfig/WindowsServer2022_STIG.zip" `
-    -DisplayName "Windows Server 2022 - DISA STIG Compliance" `
-    -Description "Audit DISA STIG compliance on Windows Server 2022 using PowerSTIG with xPSDesiredStateConfiguration" `
+    -ContentUri "https://stigconfigs7920.blob.core.windows.net/guestconfig/WindowsServer2022MS_STIG.zip" `
+    -DisplayName "Windows Server 2022 MS - Apply - DISA STIG Compliance" `
+    -Description "Apply DISA STIG compliance on Windows Server 2022 member servers using PowerSTIG with xPSDesiredStateConfiguration" `
     -Path "C:\GuestConfig\Policy" `
     -Platform Windows `
     -PolicyVersion  1.0.0 `
-    -Mode Audit
+    -Mode ApplyAndAutoCorrect
 
 # This creates policy files in C:\GuestConfig\Policy\
 # - AuditIfNotExists.json (the policy definition)
 # - DeployIfNotExists.json (optional - for auto-remediation)
 
 # Publish the policy to Azure
-$policyPath = "C:\GuestConfig\Policy\WindowsServer2022_STIG_AuditIfNotExists.json"
+$policyPath = "C:\GuestConfig\Policy\WindowsServer2022MS_STIG_DeployIfNotExists.json"
 
 # Create the policy in Azure from the generated file
 New-AzPolicyDefinition `
-    -Name "windows-server-2022-stig" `
-    -DisplayName "Windows Server 2022 - DISA STIG Compliance" `
+    -Name "windows-server-2022ms-apply-stig" `
+    -DisplayName "Windows Server 2022 MS - Apply - DISA STIG Compliance" `
     -Policy $policyPath
 
-$policy = Get-AzPolicyDefinition -Name "windows-server-2022-stig"
-
+$policy = Get-AzPolicyDefinition -Name "windows-server-2022ms-apply-stig"
 Write-Host "`n✓ Policy definition created!" -ForegroundColor Green
 Write-Host "  Policy Name: $($policy.Name)" -ForegroundColor Gray
 Write-Host "`nPolicy files generated in C:\GuestConfig\Policy\" -ForegroundColor Gray
@@ -350,19 +350,19 @@ Assign the policy to a subscription, resource group, or specific VMs:
 $subscription = Get-AzSubscription -SubscriptionId "<YOUR_SUBSCRIPTION_ID>"
 
 $assignment = New-AzPolicyAssignment `
-    -Name "stig-server-2022-subscription" `
-    -DisplayName "STIG Compliance Audit - Windows Server 2022 (Subscription)" `
+    -Name "stig-server-2022ms-subscription" `
+    -DisplayName "STIG Compliance Apply - Windows Server 2022 MS (Subscription)" `
     -PolicyDefinition $policy `
     -Scope "/subscriptions/$($subscription.Id)" `
     -Location "eastus" `
     -IdentityType 'SystemAssigned'
 
 # Option B: Assign to specific resource group
-$rgScope = "/subscriptions/588cd6df-202a-4e3c-a4c1-457ef004af7a/resourceGroups/core-rg"
+$rgScope = "/subscriptions/588cd6df-202a-4e3c-a4c1-457ef004af7a/resourceGroups/test-rg"
 
 $assignment = New-AzPolicyAssignment `
-    -Name "stig-server-2022-rg" `
-    -DisplayName "STIG Compliance Audit - Windows Server 2022 (Resource Group)" `
+    -Name "stig-server-2022ms-apply-rg" `
+    -DisplayName "STIG Compliance Apply - Windows Server 2022 MS (Resource Group)" `
     -PolicyDefinition $policy `
     -Scope $rgScope `
     -Location "eastus" `

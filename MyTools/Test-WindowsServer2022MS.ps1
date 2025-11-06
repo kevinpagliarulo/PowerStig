@@ -59,34 +59,23 @@
 [CmdletBinding()]
 param(
     [Parameter()]
-    [string]$OutputPath = 'C:\DSC\WindowsServer2022',
+    [string]$OutputPath = 'C:\DSC\WindowsServer2022MS',
     
     [Parameter()]
     [string[]]$ComputerName = 'localhost',
     
     [Parameter()]
-    [string]$OrgSettings,
+    [string]$OrgSettings = "$PSScriptRoot\OrgSettings-WindowsServer2022MS.xml",
     
     [Parameter()]
     [string[]]$SkipRules = @(
-        'V-254442.a',  # Root Certificate - DoD Root CA 2
-        'V-254442.b',  # Root Certificate - DoD Root CA 3  
-        'V-254442.c',  # Root Certificate - DoD Root CA 4
-        'V-254442.d',  # Root Certificate - DoD Root CA 5
-        'V-254443',    # Root Certificate - DoD Interoperability Root CA 2
         'V-254444.a',  # Root Certificate - Additional cert requirement
-        'V-254444.b',  # Root Certificate - Additional cert requirement
-        'V-254391',    # NTFS Access - NTDS permissions (invalid principal name)
-        'V-254392',    # NTFS Access - Identity translation error
-        'V-254271',    # WindowsFeature - PNRP not available on this DC
-        'V-254254.a',  # Registry Access - Event log registry permissions (GuestConfig conflict workaround)
-        'V-254254.b',  # Registry Access - Event log registry permissions (GuestConfig conflict workaround)
-        'V-254254.c'   # Registry Access - Event log registry permissions (GuestConfig conflict workaround)
+        'V-254444.b'  # Root Certificate - Additional cert requirement
     )
 )
 
-#zRequires -Version 5.1
-#zRequires -RunAsAdministrator
+#Requires -Version 5.1
+#Requires -RunAsAdministrator
 
 # Verify required modules are installed
 if (-not (Get-Module -Name PowerStig -ListAvailable))
@@ -110,7 +99,7 @@ Write-Host "  Org Settings: $(if($OrgSettings){"$OrgSettings"}else{"None"})" -Fo
 Write-Host "  Skip Rules: $(if($SkipRules){"$($SkipRules.Count) rules"}else{"None"})`n" -ForegroundColor Gray
 
 # Configuration Definition
-configuration WindowsServer2022_STIG
+configuration WindowsServer2022MS_STIG
 {
     param
     (
@@ -149,20 +138,24 @@ configuration WindowsServer2022_STIG
         WindowsServer Server2022BaselineMemberServer
         {
             OsVersion   = '2022'
-            OsRole      = 'DC'  # MS = Member Server, DC = Domain Controller
+            OsRole      = 'MS'  # MS = Member Server, DC = Domain Controller
             StigVersion = '2.5'
+            ForestName  = 'kevinpagliarulo.com'
+            DomainName  = 'kevinpagliarulo.com'
             SkipRule    = $SkipRuleList
+            OrgSettings = $OrgSettingsPath
         }
-        
 
-        <#
-        # Optional: Add additional STIGs as needed
-        
         # Windows Defender STIG
         WindowsDefender DefenderSTIG
         {
             StigVersion = '2.4'
         }
+
+        <#
+        # Optional: Add additional STIGs as needed
+        
+        
         
         # Windows Firewall STIG
         WindowsFirewall FirewallSTIG
@@ -245,7 +238,7 @@ try
         $compileParams.SkipRuleList = $SkipRules
     }
     
-    WindowsServer2022_STIG @compileParams
+    WindowsServer2022MS_STIG @compileParams
     
     Write-Host ""
     Write-Host "Configuration compiled successfully!" -ForegroundColor Green
