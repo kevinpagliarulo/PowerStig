@@ -7,7 +7,7 @@ foreach ($rule in $rules)
 {
     $resourceTitle = Get-ResourceTitle -Rule $rule
 
-    Script $resourceTitle
+    xScript $resourceTitle
     {
         <#
             This is left blank because we are only using the script resource as an audit tool for

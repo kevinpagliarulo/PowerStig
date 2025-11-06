@@ -5,7 +5,7 @@ $rules = $stig.RuleList | Select-Rule -Type DnsServerRootHintRule
 
 foreach ($rule in $rules)
 {
-    Script (Get-ResourceTitle -Rule $rule)
+    xScript (Get-ResourceTitle -Rule $rule)
     {
         SetScript =
         {

@@ -5,7 +5,7 @@ $rules = $stig.RuleList | Select-Rule -Type ServiceRule
 
 foreach ( $rule in $rules )
 {
-    Service (Get-ResourceTitle -Rule $rule)
+    xService (Get-ResourceTitle -Rule $rule)
     {
         Name        = $rule.ServiceName
         State       = $rule.ServiceState

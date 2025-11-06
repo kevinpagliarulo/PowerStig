@@ -58,7 +58,7 @@ foreach ($rule in $rules)
 
             if ($rule.Ensure -eq 'Absent')
             {
-                Registry (Get-ResourceTitle -Rule $rule)
+                xRegistry (Get-ResourceTitle -Rule $rule)
                 {
                     Key       = $rule.Key -replace 'HKEY_LOCAL_MACHINE', 'HKLM:'
                     ValueName = $rule.ValueName
@@ -68,7 +68,7 @@ foreach ($rule in $rules)
             }
             else
             {
-                Registry (Get-ResourceTitle -Rule $rule)
+                xRegistry (Get-ResourceTitle -Rule $rule)
                 {
                     Key       = $rule.Key
                     ValueName = $rule.ValueName

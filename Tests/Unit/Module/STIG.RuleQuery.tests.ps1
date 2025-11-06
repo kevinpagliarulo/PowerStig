@@ -4,7 +4,7 @@
 
 $xmlTestData = @'
 <DISASTIG version="1" classification="UNCLASSIFIED" customname="" stigid="TestSTIGData" description="Test STIG Data" filename="U_Test_Data_STIG_V1R1_Manual-xccdf.xml" releaseinfo="Release: 1 Benchmark Date: 14 Nov 2016" title="Test STIG Data Security Technical Implementation Guide" notice="terms-of-use" source="STIG.DOD.MIL" fullversion="1.1" created="9/6/2019">
-  <RegistryRule dscresourcemodule="PSDscResources">
+  <RegistryRule dscresourcemodule="xPSDesiredStateConfiguration">
     <Rule id="V-1000" severity="medium" conversionstatus="pass" title="SRG-APP-000000" dscresource="Registry">
       <Description>&lt;VulnDiscussion&gt;Test STIG Description&lt;/VulnDiscussion&gt;&lt;</Description>
       <DuplicateOf />

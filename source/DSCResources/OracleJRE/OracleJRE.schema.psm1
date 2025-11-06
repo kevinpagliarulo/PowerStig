@@ -82,6 +82,6 @@ configuration OracleJRE
     Import-DscResource -ModuleName FileContentDsc -ModuleVersion 1.3.0.151
     . "$resourcePath\oraclejre.KeyValuePairFile.ps1"
 
-    Import-DscResource -ModuleName PSDSCresources -ModuleVersion 2.12.0.0
+    Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
     . "$resourcePath\windows.Script.skip.ps1"
 }

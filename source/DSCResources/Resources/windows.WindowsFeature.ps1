@@ -15,7 +15,7 @@ foreach ($rule in $rules)
         $rule.Name = 'FS-SMB1'
     }
 
-    WindowsFeature (Get-ResourceTitle -Rule $rule)
+    xWindowsFeature (Get-ResourceTitle -Rule $rule)
     {
         Name   = $rule.Name
         Ensure = $rule.Ensure

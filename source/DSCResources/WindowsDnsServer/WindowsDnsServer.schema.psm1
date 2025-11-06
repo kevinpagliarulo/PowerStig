@@ -98,7 +98,7 @@ configuration WindowsDnsServer
     Import-DscResource -ModuleName xDnsServer -ModuleVersion 1.16.0.0
     . "$resourcePath\windows.xDnsServerSetting.ps1"
 
-    Import-DscResource -ModuleName PSDSCresources -ModuleVersion 2.12.0.0
+    Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
     . "$resourcePath\windows.Registry.ps1"
     . "$resourcePath\windows.Script.skip.ps1"
     . "$resourcePath\windows.Script.RootHint.ps1"
